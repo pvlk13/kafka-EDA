@@ -1,0 +1,24 @@
+name: kafka
+properties:
+   configuration:
+      ingress:
+        external: false
+        targetPort: 9092
+   template:
+      containers:
+        - name: kafka
+          image: apache/kafka:latest
+          ports:
+            - containerPort: 9092
+          env:
+            - name: KAFKA_NODE_ID
+              value: "1"
+
+            - name: KAFKA_PROCESS_ROLES
+              value: "broker,controller"
+
+            - name: KAFKA_LISTENERS
+              value: PLAINTEXT://:9092
+
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: PLAINTEXT://kafka:9092

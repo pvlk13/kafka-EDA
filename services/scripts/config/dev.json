@@ -1,0 +1,7 @@
+{
+    "services": {
+        "order-service": "https://order-service-app.greenrock-aca3581c.westus.azurecontainerapps.io/health",
+        "driver-service": "https://driver-service-app.greenrock-aca3581c.westus.azurecontainerapps.io/health"
+    },
+    "timeout": 5
+}

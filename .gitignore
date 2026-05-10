@@ -1,0 +1,31 @@
+# Node modules
+node_modules/
+
+# Environment variables (geheimen!)
+.env
+.env.local
+.env.production
+
+# Terraform geheimen
+*.tfstate
+*.tfstate.backup
+*.backup
+**/*.tfstate*
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+
+# Mac bestanden
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+
+myagent/
+# Terraform
+*.tfstate
+*.tfstate.*
+*.backup
+terraform.tfvars
+.terraform/

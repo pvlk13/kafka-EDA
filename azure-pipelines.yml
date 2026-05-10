@@ -1,0 +1,127 @@
+trigger:
+- main
+
+resources:
+- repo: self
+
+variables:
+  dockerRegistryServiceConnection: 'acr-connection'
+  azureServiceConnection: 'azure-connection'
+  containerRegistry: 'vijaya1234acr.azurecr.io'
+  tag: '$(Build.BuildId)'
+  vmImageName: 'ubuntu-latest'
+
+stages:
+
+- stage: Build_Order_Service
+  displayName: Build order-service
+  jobs:
+  - job: Build
+    pool:
+      name: Default
+    steps:
+    - task: AzureCLI@2
+      displayName: Build and push order-service
+      inputs:
+        azureSubscription: 'azure-connection'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az acr login --name vijaya1234acr
+          docker buildx build \
+            --platform linux/amd64 \
+            -t vijaya1234acr.azurecr.io/order-service:$(tag) \
+            --push \
+            $(Build.SourcesDirectory)/services/order-services
+- stage: Build_Driver_Service
+  displayName: Build driver-service
+  jobs:
+  - job: Build
+    pool:
+      name: Default
+    steps:
+    - task: AzureCLI@2
+      displayName: Build and push driver-service
+      inputs:
+        azureSubscription: 'azure-connection'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az acr login --name vijaya1234acr
+          docker buildx build \
+            --platform linux/amd64 \
+            -t vijaya1234acr.azurecr.io/driver-service:$(tag) \
+            --push \
+            $(Build.SourcesDirectory)/services/driver-services
+
+
+- stage: Security_Scan 
+  displayName: Security Scan using Trivy
+  dependsOn: 
+  - Build_Order_Service
+  - Build_Driver_Service
+  jobs:
+  - job: SecurityScan
+    pool:
+      name: Default
+    steps:
+    - script: |
+        az acr login --name vijaya1234acr
+        # Check of Trivy al geïnstalleerd is
+        if ! command -v trivy &> /dev/null; then
+          echo "📦 Installing Trivy..."
+          brew install aquasecurity/trivy/trivy
+        else
+          echo "✅ Trivy already installed: $(trivy --version)"
+        fi
+
+        echo "🔍 Scanning order-service..."
+        trivy image \
+          --severity HIGH,CRITICAL \
+          --vuln-type library \
+          --exit-code 1 \
+          vijaya1234acr.azurecr.io/order-service:$(tag)
+
+        echo "🔍 Scanning driver-service..."
+        trivy image \
+          --severity HIGH,CRITICAL \
+          --vuln-type library \
+          --exit-code 0 \
+          vijaya1234acr.azurecr.io/driver-service:$(tag)
+      displayName: Run Trivy Security Scan
+- stage: Deploy
+  displayName: Deploy to Container Apps
+  dependsOn:
+  - Build_Order_Service
+  - Build_Driver_Service
+  - Security_Scan
+  jobs:
+  - job: Deploy
+    pool:
+      name: Default
+    steps:
+    - task: AzureCLI@2
+      displayName: Deploy order-service
+      inputs:
+        azureSubscription: 'azure-connection'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          set -x
+          az containerapp update \
+            --name order-service-app \
+            --resource-group vijaya-rg-container-apps \
+            --image vijaya1234acr.azurecr.io/order-service:$(tag)
+
+    - task: AzureCLI@2
+      displayName: Deploy driver-service
+      inputs:
+        azureSubscription: 'azure-connection'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          set -x
+          az containerapp update \
+            --name driver-service-app \
+            --resource-group vijaya-rg-container-apps \
+            --image vijaya1234acr.azurecr.io/driver-service:$(tag)

@@ -1,6 +1,5 @@
 const { Kafka } = require('kafkajs');
 const { saveDriverLocation } = require('../src/db');
-require('dotenv').config();
 
 const kafka = new Kafka({
   clientId: 'driver-service',
@@ -21,20 +20,39 @@ function findNearestDriver(orderLat, orderLng) {
     { id: 2, name: 'Driver Jagdesh', lat: 51.9100, lng: 4.4800 },
     { id: 3, name: 'Driver Saroja', lat: 51.9300, lng: 4.4700 }
   ];
-
   return drivers.reduce((nearest, driver) => {
     const distance = Math.sqrt(
       Math.pow(driver.lat - orderLat, 2) +
       Math.pow(driver.lng - orderLng, 2)
     );
-
     return distance < nearest.distance
       ? { driver, distance }
       : nearest;
-
   }, { driver: null, distance: Infinity });
 }
 
 async function updateOrderStatus(orderId, status, driverName) {
-  console.log(`Order ${orderId} updated to ${status} by ${driverName}`);
+  console.log(`🔄 Order ${orderId} updated to ${status} by ${driverName}`);
 }
+
+async function connectConsumer() {
+  await consumer.connect();
+  console.log('✅ Consumer connected to Event Hubs');
+
+  await consumer.subscribe({ topic: 'orders', fromBeginning: false });
+
+  await consumer.run({
+    eachMessage: async ({ message }) => {
+      const order = JSON.parse(message.value.toString());
+      console.log('📦 Received order:', order);
+
+      const { driver } = findNearestDriver(order.location.lat, order.location.lng);
+      console.log(`🚗 Nearest driver: ${driver.name}`);
+
+      await updateOrderStatus(order.orderId, 'assigned', driver.name);
+      await saveDriverLocation(driver, order.orderId);
+    }
+  });
+}
+
+module.exports = { connectConsumer };

@@ -39,7 +39,7 @@ async function connectConsumer() {
   await consumer.connect();
   console.log('✅ Consumer connected to Event Hubs');
 
-  await consumer.subscribe({ topic: 'orders', fromBeginning: false });
+  await consumer.subscribe({ topic: 'order-topic', fromBeginning: false });
 
   await consumer.run({
     eachMessage: async ({ message }) => {

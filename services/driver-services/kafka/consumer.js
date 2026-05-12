@@ -50,7 +50,7 @@ async function connectConsumer() {
       console.log(`🚗 Nearest driver: ${driver.name}`);
 
       await updateOrderStatus(order.orderId, 'assigned', driver.name);
-      await saveDriverLocation(driver, order.orderId);
+      await saveDriverLocation(driver.id, driver.name, driver.lat, driver.lng);
     }
   });
 }

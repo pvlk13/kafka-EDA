@@ -32,7 +32,16 @@ function findNearestDriver(orderLat, orderLng) {
 }
 
 async function updateOrderStatus(orderId, status, driverName) {
-  console.log(`🔄 Order ${orderId} updated to ${status} by ${driverName}`);
+  try {
+    await fetch(`https://order-service-app.greenrock-aca3581c.westus.azurecontainerapps.io/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, driverName })
+    });
+    console.log(`✅ Order ${orderId} updated to ${status} by ${driverName}`);
+  } catch (err) {
+    console.error('❌ Failed to update order status:', err.message);
+  }
 }
 
 async function connectConsumer() {

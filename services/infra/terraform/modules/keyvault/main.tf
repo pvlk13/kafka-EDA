@@ -34,19 +34,21 @@ resource "azurerm_key_vault_secret" "eventhub_connection_string" {
     name = "eventhub-connection-string"
     value = var.eventhub_connection_string
     key_vault_id = azurerm_key_vault.main.id
+    expiration_date = timeadd(timestamp(), "2160h") # verloopt na 90 dagen
 }
 
 resource "azurerm_key_vault_secret" "postgres_password" {
     name = "postgres-password"
     value = var.postgres_password
     key_vault_id = azurerm_key_vault.main.id
-  
+    expiration_date = timeadd(timestamp(), "2160h") # verloopt na 90 dagen
 }
 
 resource "azurerm_key_vault_secret" "acr_password" {
     name = "acr-password"
     value = var.acr_password
     key_vault_id = azurerm_key_vault.main.id
+    expiration_date = timeadd(timestamp(), "2160h") # verloopt na 90 dagen
   
 }
 
@@ -55,10 +57,13 @@ resource "azurerm_key_vault_secret" "appinsights_connection_string"{
   name = "appinsights-connection-string"
   value = var.appinsights_connection_string
   key_vault_id = azurerm_key_vault.main.id
+  expiration_date = timeadd(timestamp(), "2160h") # verloopt na 90 dagen
 }
 # DB password 
 resource "azurerm_key_vault_secret" "db_password" {
   name = "db-password"
   value = var.db_password
   key_vault_id = azurerm_key_vault.main.id
+  content_type = "password"
+  expiration_date = timeadd(timestamp(), "2160h") # verloopt na 90 dagen
 }

@@ -148,3 +148,47 @@ resource "azurerm_monitor_metric_alert" "slow_response_time" {
         
         }
 }
+resource "azurerm_monitor_diagnostic_setting" "keyvault_logs" {
+  name                       = "keyvault-logs"
+  target_resource_id         = var.key_vault_id
+  log_analytics_workspace_id = var.log_analytics_workspace_id
+
+  enabled_log {
+    category = "AuditEvent"
+  }
+
+  metric {
+    category = "AllMetrics"
+  }
+}
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "secret_expiry_alert" {
+  name                = "keyvault-secret-expiry"
+  resource_group_name = var.resource_group_name
+  location            = var.location
+
+  evaluation_frequency = "PT1H"
+  window_duration      = "P1D"
+  severity             = 2
+
+  scopes = [
+    azurerm_log_analytics_workspace.main.id
+  ]
+
+  criteria {
+    query = <<-QUERY
+AzureDiagnostics
+| where ResourceType == "VAULTS"
+| where OperationName contains "SecretNearExpiry"
+QUERY
+
+    time_aggregation_method = "Count"
+    threshold               = 0
+    operator                = "GreaterThan"
+  }
+
+  action {
+    action_groups = [
+      azurerm_monitor_action_group.main.id
+    ]
+  }
+}

@@ -81,5 +81,8 @@ module "monitoring" {
   location            = module.resource_group.location
   order_service_url   = module.container_apps.order_service_url
   driver_service_url  = module.container_apps.driver_service_url
-  alert_email         = var.alert_email
+  log_analytics_workspace_id = module.monitoring.log_analytics_workspace_id
+  key_vault_id = module.keyvault.key_vault_id
+  alert_email = var.alert_email
+  azurerm_key_vault = module.keyvault.key_vault_id
 }

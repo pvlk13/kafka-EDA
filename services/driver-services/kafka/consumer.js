@@ -61,3 +61,4 @@ async function connectConsumer() {
     throw err;
   }
 }
+module.exports = { connectConsumer };
